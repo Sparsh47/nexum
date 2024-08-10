@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { FaRegFolder, FaFile } from "react-icons/fa";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
 
-const FileTree = () => {
+const FileTree = ({ onSelect }: { onSelect: (path: string) => void }) => {
   const [files, setFiles] = useState<Record<string, any>>([]);
   async function getFileTree() {
     const response = await axios.get("http://localhost:9000/files");
@@ -26,7 +26,9 @@ const FileTree = () => {
   return (
     <div>
       <div className="w-full p-3 bg-stone-700 mb-2"></div>
-      {files && files.tree && <FileTreeNode data={files?.tree} />}
+      {files && files.tree && (
+        <FileTreeNode onSelect={onSelect} data={files?.tree} />
+      )}
     </div>
   );
 };
@@ -41,9 +43,10 @@ interface TreeNode {
 
 interface FileTreeProps {
   data: TreeNode;
+  onSelect: (path: string) => void;
 }
 
-const FileTreeNode: React.FC<FileTreeProps> = ({ data }) => {
+const FileTreeNode: React.FC<FileTreeProps> = ({ data, onSelect }) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const toggle = (name: string) => {
@@ -63,7 +66,12 @@ const FileTreeNode: React.FC<FileTreeProps> = ({ data }) => {
           {expanded[node.name] && (
             <div className="border-[1px] border-l-gray-600 border-transparent">
               {node.children.map(
-                (child) => child && renderTree(child, `${path}/${node.name}`)
+                (child) =>
+                  child &&
+                  renderTree(
+                    child,
+                    `${path}${path.length > 0 ? "/" : ""}${node.name}`
+                  )
               )}
             </div>
           )}
@@ -72,7 +80,7 @@ const FileTreeNode: React.FC<FileTreeProps> = ({ data }) => {
         <div
           onClick={(e) => {
             e.stopPropagation();
-            console.log(`${path}/${node.name}`);
+            onSelect(`${path}/${node.name}`);
           }}
           className="flex items-center gap-2 py-1 px-2 hover:bg-stone-600 cursor-pointer"
         >
